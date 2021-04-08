@@ -13,12 +13,6 @@ START_DATE = Date.new(year, month, 1)
 END_DATE = Date.new(year, month, -1)
 END_DAY = END_DATE.day
 
-# 指定された年月日が、現在の年月かを判定するメソッド
-def today?(year, month, day)
-  today_date = Date.today
-  year == today_date.year && month == today_date.month && day == today_date.day
-end
-
 puts "   　　#{month}月 #{year}"
 puts " 日 月 火 水 木 金 土"
 
@@ -44,4 +38,4 @@ START_DATE.wday.times { print "   " }
   end
   print "\n" if date.saturday?
 end
-print "\n\n"
+print "\n"
