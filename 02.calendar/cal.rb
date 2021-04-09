@@ -6,36 +6,26 @@ params = ARGV.getopts("m:", "y:")
 
 # short_optにはデフォルト値を設定できないので、
 # nilの(引数が渡されなかった)場合に今月の年月を設定する
-year = params['y'].to_i || Date.today.year
-month = params['m'].to_i || Date.today.month
+year = params['y']&.to_i || Date.today.year
+month = params['m']&.to_i || Date.today.month
 
 START_DATE = Date.new(year, month, 1)
 END_DATE = Date.new(year, month, -1)
 END_DAY = END_DATE.day
 
 puts "   　　#{month}月 #{year}"
-puts " 日 月 火 水 木 金 土"
+puts "日 月 火 水 木 金 土"
 
-START_DATE.wday.times { print "   " }
+print "   " * START_DATE.wday
 (START_DATE..END_DATE).each do |date|
-  # 月の開始の曜日によってスペースの数を調整
-  day = date.day
-  # 日付が１桁か２桁かでスペースの数を調整
-  if day < 10
-    # 今日の日付であれば、背景色と文字色を反転させる
-    if date == Date.today
-      print " " + "\e[7m #{day.to_s}\e[0m"
-    else
-      print "  " + day.to_s
-    end
+  day = date.day.to_s
+  # 今日の日付であれば、背景色と文字色を反転させる
+  if date == Date.today
+    print "\e[7m#{day.rjust(2)}\e[0m"
   else
-    # 今日の日付であれば、背景色と文字色を反転させる
-    if date == Date.today
-      print "\e[7m #{day.to_s}\e[0m"
-    else
-      print " " + day.to_s
-    end
+    print day.rjust(2)
   end
+  print " "
   print "\n" if date.saturday?
 end
 print "\n"
