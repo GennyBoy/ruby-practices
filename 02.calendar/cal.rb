@@ -13,7 +13,6 @@ month = params['m']&.to_i || Date.today.month
 
 START_DATE = Date.new(year, month, 1)
 END_DATE = Date.new(year, month, -1)
-END_DAY = END_DATE.day
 
 puts "   　　#{month}月 #{year}"
 puts '日 月 火 水 木 金 土'
