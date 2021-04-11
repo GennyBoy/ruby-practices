@@ -1,16 +1,15 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 20.times do |i|
   i += 1
-  case
-  when i % 3 == 0 && i % 5 == 0
-    puts "FizzBuzz"
-  when i % 3 == 0
-    puts "Fizz"
-  when i % 5 == 0
-    puts "Buzz"
+  if (i % 3).zero? && (i % 5).zero?
+    puts 'FizzBuzz'
+  elsif (i % 3).zero?
+    puts 'Fizz'
+  elsif (i % 5).zero?
+    puts 'Buzz'
   else
     puts i
   end
 end
-
