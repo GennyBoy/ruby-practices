@@ -5,8 +5,7 @@ def split_into_frames(scores)
   shots = []
   scores.split(',').each { |s| s == 'X' ? (shots.push 10, 0) : shots << s.to_i }
 
-  frames = []
-  shots.each_slice(2) { |s| frames << s }
+  frames = shots.each_slice(2).to_a
   frames
 end
 
