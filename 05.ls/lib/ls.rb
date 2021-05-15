@@ -8,14 +8,45 @@ require 'etc'
 def ls(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
   specified_dir = dir || File.absolute_path('.')
 
-  list = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
+  list, block_total = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
 
   if long_list_flag
+    list.unshift("total #{block_total}")
     list.join("\n")
   else
     # より良いメソッド名があれば変えたい
     convert_list_without_long_option_to_str(list, columns_size)
   end
+end
+
+def create_list(path, list_all_flag, reverse_flag, long_list_flag)
+  # File::FNM_DOTMATCH : 隠しファイルも含める
+  # 0 : デフォルト値(フラグ指定なし = 隠しファイルを含めない)
+  flags = list_all_flag ? File::FNM_DOTMATCH : 0
+
+  file_path_list = Dir.glob("#{path}/*", flags).sort
+
+  blocks_total = 0
+  file_path_list.each { |item| blocks_total += File.stat(item).blocks }
+
+  list =
+    if long_list_flag
+      create_long_list(file_path_list)
+    else
+      file_path_list.map { |item| setup_basename(item) }
+    end
+
+  list.reverse! if reverse_flag
+  [list, blocks_total]
+end
+
+def create_long_list(list)
+  lines = []
+
+  list.each do |item|
+    lines << create_rows_with_long_option(item)
+  end
+  lines
 end
 
 def convert_list_without_long_option_to_str(list, columns_size)
@@ -54,7 +85,7 @@ def create_rows_with_long_option(item)
   # 本当のlsコマンドの仕様では半年以上前からだと、年が表示されるようになる
   last_updated_hour = last_updated.year == Date.today.year ? last_updated.strftime('%R') : last_updated.year
 
-  file_base_name = fs.ftype == 'directory' ? File.basename(item).concat('/') : File.basename(item)
+  file_base_name = setup_basename(item)
 
   line.push setup_entry_type_and_permissions(fs),
             fs.nlink.to_s.rjust(2),
@@ -69,30 +100,12 @@ def create_rows_with_long_option(item)
   line.join(' ')
 end
 
-def create_list(path, list_all_flag, reverse_flag, long_list_flag)
-  # File::FNM_DOTMATCH : 隠しファイルも含める
-  # 0 : デフォルト値(フラグ指定なし = 隠しファイルを含めない)
-  flags = list_all_flag ? File::FNM_DOTMATCH : 0
-
-  file_path_list = Dir.glob("#{path}/*", flags).sort
-
-  list =
-    if long_list_flag
-      create_long_list(file_path_list)
-    else
-      file_path_list.map { |item| File.basename(item) }
-    end
-
-  list.reverse! if reverse_flag
-  list
-end
-
-def create_long_list(list)
-  lines = []
-  list.each do |item|
-    lines << create_rows_with_long_option(item)
+def setup_basename(file)
+  if File.stat(file).ftype == 'directory'
+    File.basename(file).concat('/')
+  else
+    File.basename(file)
   end
-  lines
 end
 
 def setup_entry_type_and_permissions(file_stat_object)
