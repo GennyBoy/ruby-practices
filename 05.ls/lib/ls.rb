@@ -1,0 +1,146 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'date'
+require 'etc'
+
+def ls(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
+  specified_dir = dir || File.absolute_path('.')
+
+  list = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
+
+  if long_list_flag
+    list.join("\n")
+  else
+    # より良いメソッド名があれば変えたい
+    convert_list_without_long_option_to_str(list, columns_size)
+  end
+end
+
+def convert_list_without_long_option_to_str(list, columns_size)
+  rows_size = (list.size / columns_size.to_f).ceil
+  str = ''
+  create_rows_without_long_option(columns_size.to_i, rows_size, list).each do |row|
+    row.each { |file| str += file&.ljust(20) || '' }
+    str = "#{str.rstrip}\n"
+  end
+  str
+end
+
+def create_rows_without_long_option(columns_size, rows_size, list)
+  rows = Array.new(rows_size) { [] }
+  index = 0
+  list.size.times do
+    index = 0 if index == rows_size
+    if list.size == columns_size - rows.first.size
+      rows.first << list.shift
+    else
+      rows[index] << list.shift
+    end
+    index += 1
+  end
+  rows
+end
+
+def create_rows_with_long_option(item)
+  line = []
+
+  fs = File.stat(item)
+
+  last_updated = fs.mtime
+
+  # 今年でない場合は、年を表示する
+  # 本当のlsコマンドの仕様では半年以上前からだと、年が表示されるようになる
+  last_updated_hour = last_updated.year == Date.today.year ? last_updated.strftime('%R') : last_updated.year
+
+  file_base_name = fs.ftype == 'directory' ? File.basename(item).concat('/') : File.basename(item)
+
+  line.push setup_entry_type_and_permissions(fs),
+            fs.nlink.to_s.rjust(2),
+            Etc.getpwuid(fs.uid).name.rjust(6),
+            Etc.getgrgid(fs.gid).name.rjust(6),
+            fs.size.to_s.rjust(3),
+            last_updated.strftime('%m').tr('0', ' '),
+            last_updated.strftime('%e'),
+            last_updated_hour,
+            file_base_name
+
+  line.join(' ')
+end
+
+def create_list(path, list_all_flag, reverse_flag, long_list_flag)
+  # File::FNM_DOTMATCH : 隠しファイルも含める
+  # 0 : デフォルト値(フラグ指定なし = 隠しファイルを含めない)
+  flags = list_all_flag ? File::FNM_DOTMATCH : 0
+
+  file_path_list = Dir.glob("#{path}/*", flags).sort
+
+  list =
+    if long_list_flag
+      create_long_list(file_path_list)
+    else
+      file_path_list.map { |item| File.basename(item) }
+    end
+
+  list.reverse! if reverse_flag
+  list
+end
+
+def create_long_list(list)
+  lines = []
+  list.each do |item|
+    lines << create_rows_with_long_option(item)
+  end
+  lines
+end
+
+def setup_entry_type_and_permissions(file_stat_object)
+  entry_type_and_permissions = convert_file_type_to_mode(file_stat_object.ftype).dup
+
+  permissions_in_octal = file_stat_object.mode.to_s(8).slice(-3, 3)
+
+  index = 0
+  3.times do
+    entry_type_and_permissions << convert_permission_octal_to_characters(permissions_in_octal.slice(index))
+    index += 1
+  end
+  entry_type_and_permissions
+end
+
+def convert_file_type_to_mode(ftype)
+  {
+    'file' => '-',
+    'directory' => 'd',
+    'link' => 'l'
+  }[ftype]
+end
+
+def convert_permission_octal_to_characters(permission_in_octal)
+  {
+    '0' => '---',
+    '1' => '--x',
+    '2' => '-w-',
+    '3' => '-wx',
+    '4' => 'r--',
+    '5' => 'r-x',
+    '6' => 'rw-',
+    '7' => 'rwx'
+  }[permission_in_octal]
+end
+
+if __FILE__ == $PROGRAM_NAME
+  COLUMNS_SIZE = 3
+  list_all_flag = false
+  reverse_flag = false
+  long_list_flag = false
+
+  ARGV.options do |opt|
+    opt.on('-a') { list_all_flag = true }
+    opt.on('-r') { reverse_flag = true }
+    opt.on('-l') { long_list_flag = true }
+    opt.parse!
+  end
+  path = ARGV[0].nil? ? '.' : ARGV[0]
+  puts ls(path, columns_size: COLUMNS_SIZE, list_all_flag: list_all_flag, reverse_flag: reverse_flag, long_list_flag: long_list_flag)
+end
