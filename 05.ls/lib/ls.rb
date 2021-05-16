@@ -6,12 +6,12 @@ require 'date'
 require 'etc'
 
 def ls(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
-  specified_dir = dir || File.absolute_path('.')
+  specified_dir = dir.nil? ? File.absolute_path('.') : dir
 
-  list, block_total = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
+  list, blocks_total = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
 
   if long_list_flag
-    list.unshift("total #{block_total}")
+    list.unshift("total #{blocks_total}")
     list.join("\n")
   else
     # より良いメソッド名があれば変えたい
@@ -24,16 +24,16 @@ def create_list(path, list_all_flag, reverse_flag, long_list_flag)
   # 0 : デフォルト値(フラグ指定なし = 隠しファイルを含めない)
   flags = list_all_flag ? File::FNM_DOTMATCH : 0
 
-  file_path_list = Dir.glob("#{path}/*", flags).sort
+  sorted_file_path_list = Dir.glob("#{path}/*", flags).sort
 
   blocks_total = 0
-  file_path_list.each { |item| blocks_total += File.stat(item).blocks }
+  sorted_file_path_list.each { |item| blocks_total += File.stat(item).blocks }
 
   list =
     if long_list_flag
-      create_long_list(file_path_list)
+      create_long_list(sorted_file_path_list)
     else
-      file_path_list.map { |item| setup_basename(item) }
+      sorted_file_path_list.map { |item| setup_basename(item) }
     end
 
   list.reverse! if reverse_flag
@@ -83,7 +83,12 @@ def create_rows_with_long_option(item)
 
   # 今年でない場合は、年を表示する
   # 本当のlsコマンドの仕様では半年以上前からだと、年が表示されるようになる
-  last_updated_hour = last_updated.year == Date.today.year ? last_updated.strftime('%R') : last_updated.year
+  last_updated_hour =
+    if last_updated.year == Date.today.year
+      last_updated.strftime('%R')
+    else
+      last_updated.year
+    end
 
   file_base_name = setup_basename(item)
 
@@ -154,6 +159,6 @@ if __FILE__ == $PROGRAM_NAME
     opt.on('-l') { long_list_flag = true }
     opt.parse!
   end
-  path = ARGV[0].nil? ? '.' : ARGV[0]
+  path = ARGV[0]
   puts ls(path, columns_size: COLUMNS_SIZE, list_all_flag: list_all_flag, reverse_flag: reverse_flag, long_list_flag: long_list_flag)
 end
