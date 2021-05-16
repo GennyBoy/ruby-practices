@@ -156,7 +156,7 @@ def convert_permission_octal_to_characters(permission_in_octal)
 end
 
 if __FILE__ == $PROGRAM_NAME
-  COLUMNS_SIZE = 3
+  COLUMNS_SIZE = 3 # -lがないときの表示列数。変更するときは、この定数を書き換える。
   list_all_flag = false
   reverse_flag = false
   long_list_flag = false
