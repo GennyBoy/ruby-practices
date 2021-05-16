@@ -5,7 +5,7 @@ require 'optparse'
 require 'date'
 require 'etc'
 
-def ls(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
+def main(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
   specified_dir = dir.nil? ? File.absolute_path('.') : dir
 
   list, blocks_total = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
@@ -168,5 +168,5 @@ if __FILE__ == $PROGRAM_NAME
     opt.parse!
   end
   path = ARGV[0]
-  puts ls(path, columns_size: COLUMNS_SIZE, list_all_flag: list_all_flag, reverse_flag: reverse_flag, long_list_flag: long_list_flag)
+  puts main(path, columns_size: COLUMNS_SIZE, list_all_flag: list_all_flag, reverse_flag: reverse_flag, long_list_flag: long_list_flag)
 end
