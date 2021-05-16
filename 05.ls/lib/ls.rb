@@ -52,7 +52,7 @@ end
 def convert_list_without_long_option_to_str(list, columns_size)
   rows_size = (list.size / columns_size.to_f).ceil
   str = ''
-  create_rows_without_long_option(columns_size.to_i, rows_size, list).each do |row|
+  create_rows_without_long_option(columns_size, rows_size, list).each do |row|
     row.each { |file| str += file&.ljust(20) || '' }
     str = "#{str.rstrip}\n"
   end
