@@ -78,39 +78,29 @@ def create_rows_with_long_option(item)
   line = []
 
   fs = File.stat(item)
-
   last_updated = fs.mtime
 
-  # 今年でない場合は、年を表示する
-  # 本当のlsコマンドの仕様では半年以上前からだと、年が表示されるようになる
-  last_updated_hour =
-    if last_updated.year == Date.today.year
-      last_updated.strftime('%R')
-    else
-      last_updated.year
-    end
+  # 必要かどうか迷ったが、説明変数としてあったほうが理解しやすいかなと考え一旦変数に入れた
+  hardlink_size = fs.nlink.to_s.rjust(2)
+  file_owner = Etc.getpwuid(fs.uid).name.rjust(6)
+  file_owner_group = Etc.getgrgid(fs.gid).name.rjust(6)
+  file_size = fs.size.to_s.rjust(3)
+  last_updated_month = last_updated.strftime('%m').tr('0', ' ')
+  last_updated_day = last_updated.strftime('%e')
 
-  file_base_name = setup_basename(item)
-
+  # 関数と変数入り混じってるの気持ち悪いかも…？
+  # 必要だったら修正する
   line.push setup_entry_type_and_permissions(fs),
-            fs.nlink.to_s.rjust(2),
-            Etc.getpwuid(fs.uid).name.rjust(6),
-            Etc.getgrgid(fs.gid).name.rjust(6),
-            fs.size.to_s.rjust(3),
-            last_updated.strftime('%m').tr('0', ' '),
-            last_updated.strftime('%e'),
-            last_updated_hour,
-            file_base_name
+            hardlink_size,
+            file_owner,
+            file_owner_group,
+            file_size,
+            last_updated_month,
+            last_updated_day,
+            setup_last_update_hour(last_updated),
+            setup_basename(item)
 
   line.join(' ')
-end
-
-def setup_basename(file)
-  if File.stat(file).ftype == 'directory'
-    File.basename(file).concat('/')
-  else
-    File.basename(file)
-  end
 end
 
 def setup_entry_type_and_permissions(file_stat_object)
@@ -124,6 +114,24 @@ def setup_entry_type_and_permissions(file_stat_object)
     index += 1
   end
   entry_type_and_permissions
+end
+
+def setup_last_update_hour(last_update_date)
+  # 今年でない場合は、年を表示する
+  # 本当のlsコマンドの仕様では半年以上前からだと、年が表示されるようになる
+  if last_update_date.year == Date.today.year
+    last_update_date.strftime('%R')
+  else
+    last_update_date.year
+  end
+end
+
+def setup_basename(file)
+  if File.stat(file).ftype == 'directory'
+    File.basename(file).concat('/')
+  else
+    File.basename(file)
+  end
 end
 
 def convert_file_type_to_mode(ftype)
