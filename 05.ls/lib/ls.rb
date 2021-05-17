@@ -104,16 +104,15 @@ def create_rows_with_long_option(item)
 end
 
 def setup_entry_type_and_permissions(file_stat_object)
-  entry_type_and_permissions = convert_file_type_to_mode(file_stat_object.ftype).dup
+  entry_type_and_permissions = [convert_file_type_to_mode(file_stat_object.ftype)]
 
   permissions_in_octal = file_stat_object.mode.to_s(8).slice(-3, 3)
 
-  index = 0
-  3.times do
-    entry_type_and_permissions << convert_permission_octal_to_characters(permissions_in_octal.slice(index))
-    index += 1
-  end
-  entry_type_and_permissions
+  entry_type_and_permissions +=
+    Array.new(3) do |n|
+      convert_permission_octal_to_characters(permissions_in_octal.slice(n)).to_s
+    end
+  entry_type_and_permissions.join
 end
 
 def setup_last_update_hour(last_update_date)
