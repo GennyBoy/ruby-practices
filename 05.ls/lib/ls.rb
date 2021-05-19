@@ -6,7 +6,7 @@ require 'date'
 require 'etc'
 
 def main(dir, columns_size: 3, list_all_flag: false, reverse_flag: false, long_list_flag: false)
-  specified_dir = dir.nil? ? File.absolute_path('.') : dir
+  specified_dir = dir || File.absolute_path('.')
 
   list, blocks_total = create_list(specified_dir, list_all_flag, reverse_flag, long_list_flag)
 
