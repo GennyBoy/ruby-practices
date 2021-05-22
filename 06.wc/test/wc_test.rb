@@ -5,18 +5,18 @@ require 'minitest/autorun'
 require './lib/wc'
 
 class WcTest < Minitest::Test
-  TEST_FILE1 = "./test/fixtures/test.txt"
-  TEST_FILE2 = "./test/fixtures/test2.txt"
+  TEST_FILE1 = './test/fixtures/test.txt'
+  TEST_FILE2 = './test/fixtures/test2.txt'
 
   def test_file_input_without_line_flag
     result = main([TEST_FILE1])
-    expected = "       6      18     121 ./test/fixtures/test.txt"
+    expected = '       6      18     121 ./test/fixtures/test.txt'
     assert_equal expected, result
   end
 
   def test_file_input_with_line_flag
     result = main([TEST_FILE1], lines_flag: true)
-    expected = "       6 ./test/fixtures/test.txt"
+    expected = '       6 ./test/fixtures/test.txt'
     assert_equal expected, result
   end
 
@@ -59,7 +59,7 @@ class WcTest < Minitest::Test
     TEXT
     $stdin = StringIO.new(standard_input_text)
     result = main([])
-    expected = "      12     101     641"
+    expected = '      12     101     641'
     assert_equal expected, result
   end
 end
