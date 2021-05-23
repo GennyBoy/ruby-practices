@@ -3,7 +3,6 @@
 
 require 'optparse'
 
-# 引数ターゲットは後で見直す
 def main(file_paths, lines_flag: false)
   if file_paths.empty?
     stdin = $stdin.read

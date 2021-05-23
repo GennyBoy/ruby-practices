@@ -7,6 +7,20 @@ require './lib/wc'
 class WcTest < Minitest::Test
   TEST_FILE1 = './test/fixtures/test.txt'
   TEST_FILE2 = './test/fixtures/test2.txt'
+  INPUT_TEXT = <<~TEXT
+      total 0
+      -rw-r--r--  1 kudogen  staff   0  4 26 21:56 A_test.txt
+      drwxr-xr-x  2 kudogen  staff  64  4 26 21:55 Z_directory/
+      drwxr-xr-x  2 kudogen  staff  64  4 26 21:53 b_directory/
+      -rw-r--r--  1 kudogen  staff   0  4 28 18:21 bcd.txt
+      drwxr-xr-x  2 kudogen  staff  64  4 26 21:53 directory1/
+      -rw-r--r--  1 kudogen  staff   0  4 26 22:00 e_file.txt
+      -rw-r--r--  1 kudogen  staff   0  4 26 21:56 file.txt
+      drwxr-xr-x  2 kudogen  staff  64  4 26 21:55 test_directory/
+      -rw-r--r--  1 kudogen  staff   0  5  2 16:27 test_file.txt
+      -rw-r--r--  1 kudogen  staff   0  5  2 16:28 x_test_file.rb
+      -rw-r--r--  1 kudogen  staff   0  5  2 16:29 z_test_file.txt
+  TEXT
 
   def test_file_input_without_line_flag
     result = main([TEST_FILE1])
@@ -43,23 +57,16 @@ class WcTest < Minitest::Test
   end
 
   def test_standard_input_without_line_flag
-    standard_input_text = <<~TEXT
-      total 0
-      -rw-r--r--  1 kudogen  staff   0  4 26 21:56 A_test.txt
-      drwxr-xr-x  2 kudogen  staff  64  4 26 21:55 Z_directory/
-      drwxr-xr-x  2 kudogen  staff  64  4 26 21:53 b_directory/
-      -rw-r--r--  1 kudogen  staff   0  4 28 18:21 bcd.txt
-      drwxr-xr-x  2 kudogen  staff  64  4 26 21:53 directory1/
-      -rw-r--r--  1 kudogen  staff   0  4 26 22:00 e_file.txt
-      -rw-r--r--  1 kudogen  staff   0  4 26 21:56 file.txt
-      drwxr-xr-x  2 kudogen  staff  64  4 26 21:55 test_directory/
-      -rw-r--r--  1 kudogen  staff   0  5  2 16:27 test_file.txt
-      -rw-r--r--  1 kudogen  staff   0  5  2 16:28 x_test_file.rb
-      -rw-r--r--  1 kudogen  staff   0  5  2 16:29 z_test_file.txt
-    TEXT
-    $stdin = StringIO.new(standard_input_text)
+    $stdin = StringIO.new(INPUT_TEXT)
     result = main([])
     expected = '      12     101     641'
+    assert_equal expected, result
+  end
+
+  def test_standard_input_with_line_flag
+    $stdin = StringIO.new(INPUT_TEXT)
+    result = main([], lines_flag: true)
+    expected = '      12'
     assert_equal expected, result
   end
 end
