@@ -15,9 +15,7 @@ def main(file_paths, lines_flag: false)
 end
 
 def build_output_from_file(file_paths, lines_flag)
-  lines_to_display = []
-
-  file_paths.each { |file_path| lines_to_display << "#{build_line(file_path, lines_flag)}\n" }
+  lines_to_display = file_paths.map { |file_path| "#{build_line(file_path, lines_flag)}\n" }
 
   # 複数ファイルが渡されたときは合計値を表示する
   lines_to_display << build_total_line(file_paths, lines_flag) unless file_paths.size == 1
